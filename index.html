@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ko" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Web Editor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'mono': ['Consolas', 'Monaco', 'Courier New', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* 커스텀 스크롤바 스타일 */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 4px;
+        }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #6b7280;
+        }
+        
+        /* 검색 하이라이트 스타일 */
+        .search-highlight {
+            background-color: #fbbf24;
+            color: #000;
+        }
+        .dark .search-highlight {
+            background-color: #f59e0b;
+            color: #000;
+        }
+
+        /* 드롭다운 메뉴 스타일 */
+        .dropdown-menu {
+            display: none;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .dropdown-menu.show {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 메뉴 항목 호버 효과 */
+        .menu-item:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        
+        .dark .menu-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+<body class="h-full bg-white dark:bg-gray-900 transition-colors duration-200">
+    <div class="h-full flex flex-col">
+        <!-- Header -->
+        <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-2">
+            <div class="flex items-center justify-between">
+                <!-- Logo -->
+                <div class="flex items-center space-x-2">
+                    <span class="text-xl font-bold text-gray-900 dark:text-white">🌐</span>
+                    <h1 class="text-xl font-bold text-gray-900 dark:text-white">My Web Editor</h1>
+                </div>
+                
+                <!-- Menu Bar -->
+                <div class="flex items-center space-x-6">
+                    <!-- File Menu -->
+                    <div class="relative dropdown" data-dropdown="file">
+                        <button class="dropdown-trigger px-3 py-1 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors">
+                            파일
+                        </button>
+                        <div class="dropdown-menu absolute top-full left-0 mt-1 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-50">
+                            <button id="newBtn" class="menu-item w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 flex items-center justify-between transition-colors">
+                                새 문서
+                                <span class="text-xs text-gray-500">Ctrl+N</span>
+                            </button>
+                            <button id="openBtn" class="menu-item w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 flex items-center justify-between transition-colors">
+                                파일 열기
+                                <span class="text-xs text-gray-500">Ctrl+O</span>
+                            </button>
+                            <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+                            <button id="saveBtn" class="menu-item w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 flex items-center justify-between transition-colors">
+                                내보내기 (.txt)
+                                <span class="text-xs text-gray-500">Ctrl+S</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Edit Menu -->
+                    <div class="relative dropdown" data-dropdown="edit">
+                        <button class="dropdown-trigger px-3 py-1 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors">
+                            편집
+                        </button>
+                        <div class="dropdown-menu absolute top-full left-0 mt-1 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-50">
+                            <button id="undoBtn" class="menu-item w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 flex items-center justify-between transition-colors">
+                                실행 취소
+                                <span class="text-xs text-gray-500">Ctrl+Z</span>
+                            </button>
+                            <button id="redoBtn" class="menu-item w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 flex items-center justify-between transition-colors">
+                                다시 실행
+                                <span class="text-xs text-gray-500">Ctrl+Y</span>
+                            </button>
+                            <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+                            <button id="cutBtn" class="menu-item w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 flex items-center justify-between transition-colors">
+                                잘라내기
+                                <span class="text-xs text-gray-500">Ctrl+X</span>
+                            </button>
+                            <button id="copyBtn" class="menu-item w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 flex items-center justify-between transition-colors">
+                                복사
+                                <span class="text-xs text-gray-500">Ctrl+C</span>
+                            </button>
+                            <button id="pasteBtn" class="menu-item w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 flex items-center justify-between transition-colors">
+                                붙여넣기
+                                <span class="text-xs text-gray-500">Ctrl+V</span>
+                            </button>
+                            <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+                            <button id="searchBtn" class="menu-item w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 flex items-center justify-between transition-colors">
+                                찾기
+                                <span class="text-xs text-gray-500">Ctrl+F</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Theme Menu -->
+                    <div class="relative dropdown" data-dropdown="theme">
+                        <button class="dropdown-trigger px-3 py-1 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors flex items-center space-x-1">
+                            <span>테마</span>
+                            <span id="themeIcon">🖥️</span>
+                        </button>
+                        <div class="dropdown-menu absolute top-full left-0 mt-1 w-36 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-50">
+                            <button id="systemThemeBtn" class="menu-item w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 flex items-center space-x-2 transition-colors">
+                                <span>🖥️</span>
+                                <span>시스템</span>
+                            </button>
+                            <button id="lightThemeBtn" class="menu-item w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 flex items-center space-x-2 transition-colors">
+                                <span>☀️</span>
+                                <span>라이트</span>
+                            </button>
+                            <button id="darkThemeBtn" class="menu-item w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 flex items-center space-x-2 transition-colors">
+                                <span>🌙</span>
+                                <span>다크</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 구분선 -->
+                    <div class="h-6 w-px bg-gray-300 dark:bg-gray-600"></div>
+
+                    <!-- 현재 테마 상태 표시 -->
+                    <div class="text-sm text-gray-600 dark:text-gray-400">
+                        <span id="themeStatus">시스템 테마</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Search Bar (hidden by default) -->
+        <div id="searchBar" class="hidden bg-yellow-50 dark:bg-yellow-900 border-b border-yellow-200 dark:border-yellow-700 px-4 py-2">
+            <div class="flex items-center space-x-2">
+                <input id="searchInput" type="text" placeholder="검색어를 입력하세요..." 
+                       class="flex-1 px-3 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button id="searchPrevBtn" class="px-2 py-1 text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded transition-colors" title="이전">
+                    ↑
+                </button>
+                <button id="searchNextBtn" class="px-2 py-1 text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded transition-colors" title="다음">
+                    ↓
+                </button>
+                <span id="searchCount" class="text-sm text-gray-600 dark:text-gray-300 min-w-[100px]"></span>
+                <button id="searchCloseBtn" class="p-1 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors">
+                    ✕
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Editor Area -->
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <div class="flex-1 p-4 bg-white dark:bg-gray-800">
+                <textarea id="editor" 
+                          class="w-full h-full bg-transparent text-gray-900 dark:text-gray-100 resize-none outline-none font-mono text-sm leading-relaxed custom-scrollbar"
+                          placeholder="여기에 텍스트를 입력하세요..."
+                          spellcheck="false"></textarea>
+            </div>
+        </main>
+
+        <!-- Status Bar -->
+        <footer class="bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 px-4 py-1">
+            <div class="flex items-center justify-between text-sm text-gray-600 dark:text-gray-300">
+                <div class="flex items-center space-x-4">
+                    <span id="cursorPos">줄: 1, 열: 1</span>
+                    <span id="charCount">0자</span>
+                </div>
+                <div class="text-xs">
+                    웹 편집기 v1.0
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Hidden file input for opening files -->
+    <input type="file" id="fileInput" accept=".txt" style="display: none;">
+
+    <script src="script.js"></script>
+</body>
+</html>

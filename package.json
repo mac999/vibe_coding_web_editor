@@ -1,0 +1,21 @@
+{
+  "name": "vibe-web-editor",
+  "version": "1.0.0",
+  "description": "웹 기반 텍스트 편집기",
+  "main": "script.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "serve": "npx http-server -c-1 -o",
+    "dev": "concurrently \"npm run watch\" \"npm run serve\""
+  },
+  "keywords": ["editor", "web", "typescript"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "concurrently": "^8.0.0",
+    "http-server": "^14.0.0",
+    "@types/node": "^20.0.0"
+  }
+}
